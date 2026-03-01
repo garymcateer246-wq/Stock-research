@@ -1,1 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Stock Research Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --buy-color: #2ecc71; --sell-color: #e74c3c; --bg-dark: #1e272e; }
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; padding: 20px; color: #2d3436; }
+        .container { max-width: 1100px; margin: auto; }
+        
+        /* Header & Search */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .indicator-badge { padding: 8px 15px; border-radius: 20px; font-weight: bold; color: white; text-transform: uppercase; }
+        .status-buy { background-color: var(--buy-color); }
+        .status-sell { background-color: var(--sell-color); }
+
+        /* Dashboard Grid */
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+        /* Trading Panel */
+        .trade-panel input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+        .limit-alert { padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9rem; display: none; }
+
+        /* Technicals */
+        .tech-list { list-style: none; padding: 0; }
+        .tech-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .val { font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Stock Research Pro</h1>
+        <div id="signal-badge" class="indicator-badge status-buy">Strong Buy</div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Price Action & SMA</h3>
+            <canvas id="mainChart"></canvas>
+            
+            <div style="margin-top: 20px;">
+                <h4>Key Fundamentals</h4>
+                <div style="display: flex; gap: 20px;">
+                    <div>P/E: <span class="val" id="pe">24.2</span></div>
+                    <div>EPS: <span class="val" id="eps">6.12</span></div>
+                    <div>Debt/Eq: <span class="val" id="debt">0.45</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-bar">
+            <div class="card trade-panel">
+                <h3>Order Simulation</h3>
+                <label>Current Price: $<span id="curr-price">150.00</span></label>
+                
+                <label for="stop-limit">Stop Limit (Sell if below):</label>
+                <input type="number" id="stop-limit" value="140" oninput="checkLimits()">
+                
+                <label for="sell-limit">Sell Limit (Target Profit):</label>
+                <input type="number" id="sell-limit" value="170" oninput="checkLimits()">
+
+                <div id="stop-alert" class="limit-alert status-sell">⚠️ STOP LIMIT TRIGGERED</div>
+                <div id="sell-alert" class="limit-alert status-buy">🚀 TARGET REACHED! SELL</div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h3>Technical Summary</h3>
+                <ul class="tech-list">
+                    <li class="tech-item">RSI (14) <span id="rsi-val" class="val">42</span></li>
+                    <li class="tech-item">SMA (50) <span id="sma-val" class="val">145.20</span></li>
+                    <li class="tech-item">MACD <span class="val" style="color:var(--buy-color)">Bullish</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Simulated Data Configuration
+    const priceData = [142, 145, 148, 147, 150, 152, 150]; // Simulated prices
+    const currentPrice = priceData[priceData.length - 1];
+    const smaValue = 145.20;
+    const rsiValue = 42;
+
+    function initApp() {
+        document.getElementById('curr-price').innerText = currentPrice.toFixed(2);
+        renderChart();
+        updateSignals();
+        checkLimits();
+    }
+
+    // 2. Technical Signal Logic (The "Buy/Sell" brain)
+    function updateSignals() {
+        const badge = document.getElementById('signal-badge');
+        const rsiText = document.getElementById('rsi-val');
+
+        // RSI Logic: Over 70 = Overbought (Sell), Under 30 = Oversold (Buy)
+        if (rsiValue > 70 || currentPrice < smaValue) {
+            badge.innerText = "Sell Signal";
+            badge.className = "indicator-badge status-sell";
+        } else {
+            badge.innerText = "Buy Signal";
+            badge.className = "indicator-badge status-buy";
+        }
+    }
+
+    // 3. Stop Limit / Sell Limit Logic
+    function checkLimits() {
+        const stopLimit = parseFloat(document.getElementById('stop-limit').value);
+        const sellLimit = parseFloat(document.getElementById('sell-limit').value);
+        
+        const stopAlert = document.getElementById('stop-alert');
+        const sellAlert = document.getElementById('sell-alert');
+
+        // Show/Hide alerts based on price comparison
+        stopAlert.style.display = (currentPrice <= stopLimit) ? 'block' : 'none';
+        sellAlert.style.display = (currentPrice >= sellLimit) ? 'block' : 'none';
+    }
+
+    function renderChart() {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Today'],
+                datasets: [{
+                    label: 'Price',
+                    data: priceData,
+                    borderColor: '#3498db',
+                    tension: 0.3
+                }]
+            }
+        });
+    }
+
+    window.onload = initApp;
+</script>
+</body>
+</html>
 
